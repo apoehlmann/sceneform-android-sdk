@@ -26,9 +26,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.widget.Toast;
-import com.google.ar.core.Anchor;
-import com.google.ar.core.HitResult;
-import com.google.ar.core.Plane;
+import com.google.ar.core.*;
+import com.google.ar.core.exceptions.*;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.rendering.ModelRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
@@ -72,13 +71,23 @@ public class HelloSceneformActivity extends AppCompatActivity {
               toast.show();
               return null;
             });
-
-    arFragment.setOnTapArPlaneListener(
+      try {
+          arFragment.getArSceneView().pause();
+          Session session = new Session(this);
+          Config config = new Config(session);
+          config.setPlaneFindingMode(Config.PlaneFindingMode.VERTICAL);
+          config.setUpdateMode(Config.UpdateMode.LATEST_CAMERA_IMAGE);
+          session.configure(config);
+          arFragment.getArSceneView().setupSession(session);
+          arFragment.getArSceneView().resume();
+      } catch (CameraNotAvailableException | UnavailableArcoreNotInstalledException | UnavailableDeviceNotCompatibleException | UnavailableSdkTooOldException | UnavailableApkTooOldException e) {
+          e.printStackTrace();
+      }
+      arFragment.setOnTapArPlaneListener(
         (HitResult hitResult, Plane plane, MotionEvent motionEvent) -> {
           if (andyRenderable == null) {
             return;
           }
-
           // Create the Anchor.
           Anchor anchor = hitResult.createAnchor();
           AnchorNode anchorNode = new AnchorNode(anchor);
